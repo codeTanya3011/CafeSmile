@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 
 from .models import Users, Categories, Carts, Finally_carts, Products, engine
 
-
 with Session(engine) as session:
     db_session = session
 
@@ -70,5 +69,80 @@ def db_update_to_cart(price: DECIMAL, cart_id: int, quantity=1) -> None:
 
 
 def db_get_product_by_name(product_name: str) -> Products:
-    query = select(Products). where(Products.product_name == product_name)
+    query = select(Products).where(Products.product_name == product_name)
     return db_session.scalar(query)
+
+
+def db_ins_or_upd_finally_cart(cart_id, product_name, total_products, total_price):
+    """Постоянная корзина, новая запись или редактирование"""
+    try:
+        query = Finally_carts(cart_id=cart_id,
+                              product_name=product_name,
+                              quantity=total_products,
+                              final_price=total_price)
+        db_session.add(query)
+        db_session.commit()
+        return True
+    except IntegrityError:
+        db_session.rollback()
+        query = update(Finally_carts
+                       ).where(Finally_carts.product_name == product_name
+                               ).where(Finally_carts.cart_id == cart_id
+                                       ).values(quantity=total_products,
+                                                final_price=total_price)
+        db_session.execute(query)
+        db_session.commit()
+        return False
+
+
+def db_get_finally_price(chat_id: int) -> DECIMAL:
+    """Получение общей суммы корзины"""
+    query = select(sum(Finally_carts.final_price)
+                   ).join(Carts
+                          ).join(Users
+                                 ).where(Users.telegram == chat_id)
+    return db_session.execute(query).fetchone()[0]
+
+
+def db_get_FinallyCart_products(chat_id: int) -> Iterable:
+    """Получаем список товаров с корзины юзера"""
+    query = select(Finally_carts.product_name,
+                   Finally_carts.quantity,
+                   Finally_carts.final_price,
+                   Finally_carts.cart_id
+                   ).join(Carts
+                          ).join(Users
+                                 ).where(Users.telegram == chat_id)
+
+    return db_session.execute(query).fetchall()
+
+
+def db_get_product_for_delete(chat_id: int) -> Iterable:
+    """Получаем id и название товара для удаления с корзины"""
+    query = select(Finally_carts.id,
+                   Finally_carts.product_name
+                   ).join(Carts
+                          ).join(Users
+                                 ).where(Users.telegram == chat_id)
+
+    return db_session.execute(query).fetchall()
+
+
+def db_delete_product(finally_id: int) -> None:
+    """Delete product"""
+    query = delete(Finally_carts).where(Finally_carts.id == finally_id)
+    db_session.execute(query)
+    db_session.commit()
+
+
+def db_get_user_info(chat_id: int) -> Users:
+    """Получение информации пользователя"""
+    query = select(Users).where(Users.telegram == chat_id)
+    return db_session.scalar(query)
+
+
+def clear_finally_cart(cart_id: int) -> None:
+    """Очистка корзины"""
+    query = delete(Finally_carts).where(Finally_carts.cart_id == cart_id)
+    db_session.execute(query)
+    db_session.commit()
