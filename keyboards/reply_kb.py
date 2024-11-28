@@ -3,31 +3,40 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, ReplyKeyboardMarkup
 
 def share_phone_button() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text="Отправить свой контакт📞☎️", request_contact=True)
+    builder.button(text="☎️Надіслати свій контакт📞", request_contact=True)
 
     return builder.as_markup(resize_keyboard=True)
 
 
 def generate_main_menu() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text="🎯 Сделать заказ")
-    builder.button(text="📖 История")
-    builder.button(text="🧺 Корзина")
-    builder.button(text="⚙️ Настройки")
-    builder.adjust(1, 3)
+    builder.button(text="✅ Зробити замовлення")
+    builder.button(text="🎯🏇🏼 Геолокація та доставка")
+    builder.button(text="🧺 Кошик")
+    builder.button(text="⚙️ Налаштування")
+    builder.adjust(2, 2)
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def delivery_and_pickup() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🚛 Доставка")
+    builder.button(text="🚴🏼‍♂️ Самовивіз")
+    builder.adjust(2)
 
     return builder.as_markup(resize_keyboard=True)
 
 
 def back_to_main_menu() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text="Главное меню")
+    builder.button(text="✨ Головне меню")
 
     return builder.as_markup(resize_keyboard=True)
 
 
 def back_arrow_button() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text="↩️Назад")
+    builder.button(text="↩️ До кошика")
 
     return builder.as_markup(resize_keyboard=True)

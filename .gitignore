@@ -1,0 +1,25 @@
+**__pycache__/
+cache/
+**__init__.py
+
+# Virtual environment
+/.venv
+/venv
+*.pyc
+__pycache__/
+
+# IDEs & editors
+.vscode/
+.idea/
+
+media/
+proxy.txt
+
+# Environment variables & config
+secret/.env
+.env.local
+
+# Migrations
+**/migrations/*.py
+!**/migrations/__init__.py
+
