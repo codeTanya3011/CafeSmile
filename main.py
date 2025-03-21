@@ -12,6 +12,7 @@ TOKEN = getenv('TOKEN')
 PAY = getenv('PORTMONE')
 MANAGER = getenv('MANAGER')
 dp = Dispatcher()
+# session = AiohttpSession(proxy="http://222.252.194.204:8080")
 bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 
 dp.include_router(router)
@@ -23,3 +24,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+

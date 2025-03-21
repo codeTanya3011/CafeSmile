@@ -25,9 +25,9 @@ class Users(Base):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(300))
+    name: Mapped[str] = mapped_column(String(50))
     telegram: Mapped[int] = mapped_column(BigInteger, unique=True)
-    phone: Mapped[str] = mapped_column(String(30), nullable=True)
+    phone: Mapped[str] = mapped_column(String(15), nullable=True)
 
     carts: Mapped[int] = relationship('Carts', back_populates='user_cart')
 
@@ -44,21 +44,21 @@ class Carts(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), unique=True)
 
     user_cart: Mapped[Users] = relationship(back_populates='carts')
-    finally_id: Mapped[int] = relationship('Finally_carts', back_populates='user_cart')
+    finally_id: Mapped[int] = relationship('FinallyCarts', back_populates='user_cart')
 
     def __str__(self):
         return str(self.id)
 
 
-class Finally_carts(Base):
+class FinallyCarts(Base):
     __tablename__ = 'finally_carts'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_name: Mapped[str] = mapped_column(String(300))
+    product_name: Mapped[str] = mapped_column(String(100))
     final_price: Mapped[int] = mapped_column(DECIMAL(12, 2))
     quantity: Mapped[int]
-
     cart_id: Mapped[int] = mapped_column(ForeignKey('carts.id'))
+
     user_cart: Mapped[Carts] = relationship(back_populates='finally_id')
 
     __table_args__ = (UniqueConstraint('cart_id', 'product_name'),)
@@ -71,7 +71,7 @@ class Categories(Base):
     __tablename__ = 'categories'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    category_name: Mapped[str] = mapped_column(String(300))
+    category_name: Mapped[str] = mapped_column(String(100))
 
     products = relationship('Products', back_populates='product_category')
 
@@ -83,11 +83,12 @@ class Products(Base):
     __tablename__ = 'products'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_name: Mapped[str] = mapped_column(String[300], unique=True)
+    product_name: Mapped[str] = mapped_column(String[100], unique=True)
     description: Mapped[str]
-    image: Mapped[str] = mapped_column(String[300])
+    image: Mapped[str] = mapped_column(String[100])
     price: Mapped[DECIMAL] = mapped_column(DECIMAL(12, 2))
     category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
+
     product_category: Mapped[Categories] = relationship(back_populates='products')
 
 
