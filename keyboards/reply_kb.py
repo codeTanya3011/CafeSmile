@@ -37,6 +37,14 @@ def back_to_main_menu() -> ReplyKeyboardMarkup:
 
 def back_arrow_button() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text="↩️ До кошика")
+    builder.button(text="🧺 Кошик")
 
+    return builder.as_markup(resize_keyboard=True)
+
+
+def back_and_main_menu_buttons() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🧺 Кошик")
+    builder.button(text="✨ Головне меню") 
+    builder.adjust(2) 
     return builder.as_markup(resize_keyboard=True)

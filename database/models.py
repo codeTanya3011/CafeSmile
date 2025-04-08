@@ -16,7 +16,6 @@ DB_ADDRESS = os.getenv('DB_ADDRESS')
 DB_NAME = os.getenv('DB_NAME')
 
 DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_ADDRESS}/{DB_NAME}'
-
 engine = create_engine(DATABASE_URL, echo=True, connect_args={"client_encoding": "utf8"})
 
 
@@ -98,6 +97,12 @@ class Products(Base):
 
 
 
+# TODO: Додати мультимовність
+# class Languages(Base):
+#    __language__ = 'languages'
+
+
+
 # def reset_and_add_categories():
 
 #     print("Створюємо зоново таблицю categories...")
@@ -145,7 +150,3 @@ class Products(Base):
 # if __name__ == '__main__':
 #     reset_and_add_categories()
 
-
-# TODO: Додати мультимовність
-# class Languages(Base):
-#    __language__ = 'languages'

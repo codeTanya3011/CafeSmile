@@ -5,8 +5,8 @@ from database.db_utils import (db_get_all_category, db_get_products,
 
 
 def generate_category_menu(chat_id: int) -> InlineKeyboardMarkup:
-    categories = db_get_all_category()
     total_price = db_get_finally_price(chat_id)
+    categories = db_get_all_category()
     builder = InlineKeyboardBuilder()
     builder.button(text=f'🧺 Ваш кошик складає: {total_price if total_price else 0} UAH', callback_data='Ваш кошик')
     [builder.button(text=category.category_name,

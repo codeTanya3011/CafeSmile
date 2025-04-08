@@ -45,6 +45,13 @@ def get_image_path(image_name):
     return MEDIA_PATH / image_name
 
 
+@router.message(F.text == "✨ Головне меню")
+async def handle_main_menu(message: Message):
+    await message.answer(
+        text="🏠 Ви повернулися до головного меню",
+        reply_markup=generate_main_menu())
+
+
 @router.message(CommandStart())
 async def command_start(message: Message):
     await message.answer(f"Добрий день, <b>{message.from_user.full_name}!</b>\n"
@@ -110,18 +117,18 @@ async def delivery_handler(message: Message):
     location_button = KeyboardButton(text="Відправити геолокацію", request_location=True)
     keyboard = ReplyKeyboardMarkup(keyboard=[[location_button]], resize_keyboard=True)
 
-    await message.answer(text="Ви обрали доставку\n"
-                              "Будь ласка, надішліть вашу геолокацію для розрахунку (не забудьте увімкнути місцезнаходження на телефоні)",
-                         reply_markup=keyboard)
+    await message.answer(text="Ви обрали доставку ✅\n"
+                              "Будь ласка, надішліть вашу геолокацію для розрахунку (не забудьте увімкнути місцезнаходження на телефоні) ♥️",
+                         reply_markup=back_and_main_menu_buttons())
 
 
 @router.message(F.text == "🚴🏼‍♂️ Самовивіз")
 async def pickup_handler(message: Message):
-    await message.answer(text="Ви обрали самовивіз\n"
+    await message.answer(text="Ви обрали самовивіз ✅\n"
                               "Наша адреса: вул. Мирна, буд. 23\n"
-                              "Оплатіть будь ласка покупку, а ми будемо на вас чекати!",
-                         reply_markup=back_to_main_menu())
-
+                              "Оплатіть будь ласка покупку, а ми будемо на вас чекати ♥️",
+                         reply_markup=back_and_main_menu_buttons())
+    
 
 @router.message(lambda message: message.location is not None)
 async def location_handler(message: Message):
@@ -133,12 +140,12 @@ async def location_handler(message: Message):
     await asyncio.sleep(9) # Очікування
     await message.answer(text="Доставка виходить 100 UAH по місту🍾\n"
                               "Якщо вас влаштовує, сплатіть будь-ласка покупку та чекайте на доставку протягом години🍽\n"
-                              "Для уточнення по замовленню вам може подзвонити наш менеджер🤙\nГарного вам дня та до зустрічі🫰",
-                         reply_markup=back_to_main_menu())
+                              "Для уточнення по замовленню вам може подзвонити наш менеджер🤙\nГарного вам дня та до зустрічі🫰")
+    await message.answer("Повернення до меню", reply_markup=back_to_main_menu())
 
 
 async def show_main_menu(message: Message):
-    await message.answer(text='🔁 Виберіть напрямок',
+    await message.answer(text='🔃 Виберіть напрямок',
                          reply_markup=generate_main_menu())
 
 
@@ -197,12 +204,12 @@ async def show_product_detail(call: CallbackQuery):
         return
 
     category = product.product_category
-    category_id = category.id if category else None  # Получаем id категории
+    category_id = category.id if category else None 
 
     image_path = get_image_path(product.image)
 
     if not os.path.exists(image_path):
-        print(f"Помилка: файл {image_path} не знайдено!")  # Лог в консоли
+        print(f"Помилка: файл {image_path} не знайдено!")  # Лог в консолі
         await bot.send_message(chat_id=chat_id, text="Помилка: зображення товару не знайдено!")
         return
 
@@ -240,7 +247,7 @@ async def show_product_detail(call: CallbackQuery):
 
 #     if user_state == "UserState.step2":
 #         await call.message.answer("", reply_markup=back_button_markup)
-#         await state.set_state("UserState.step1")  # Переход к шагу 1
+#         await state.set_state("UserState.step1")  # Перехід до 1 кроку
 
 #     elif user_state == "UserState.step1":
 #         await call.message.answer("", reply_markup=back_button_markup)
@@ -269,35 +276,40 @@ async def constructor_change(call: CallbackQuery):
     message_id = call.message.message_id
     action = call.data.split()[-1]
     product_name = call.message.caption.split('\n')[0]
-    user_cart = db_get_user_cart(chat_id)
+
+    user_cart = db_get_user_cart(chat_id) 
     product = db_get_product_by_name(product_name)
-    product_price = product.price
+
+    if not product:
+        await call.message.answer("❌ Товар не знайдено")
+        return
+    if not user_cart:
+        await call.message.answer("❌ Кошик не знайдено")
+        return
+    
+    quantity = user_cart.total_products
 
     match action:
         case '+':
-            user_cart.total_products += 1
-            product_price = product_price * user_cart.total_products
-            db_update_to_cart(price=product_price,
-                              quantity=user_cart.total_products,
-                              cart_id=user_cart.id)
+            quantity += 1
         case '-':
-            if user_cart.total_products < 2:
+            if quantity < 2:
                 await call.answer('❗️ Менше 1 товару вибрати не можна')
-            else:
-                user_cart.total_products -= 1
-            product_price = product_price * user_cart.total_products
-            db_update_to_cart(price=product_price,
-                              quantity=user_cart.total_products,
-                              cart_id=user_cart.id)
+                return
+            quantity -= 1
 
-    text = text_for_caption(name=product_name,
-                            description=product.description,
-                            price=product_price)
+    total_price = product.price * quantity
+    db_update_to_cart(price=total_price, quantity=quantity, cart_id=user_cart.id)
+
+    text = text_for_caption(name=product_name, description=product.description, price=total_price)
+
     try:
-        await bot.edit_message_media(chat_id=chat_id,
-                                     message_id=message_id,
-                                     media=InputMediaPhoto(media=FSInputFile(path=product.image), caption=text),
-                                     reply_markup=generate_constructor_button(user_cart.total_products))
+        await bot.edit_message_media(
+            chat_id=chat_id,
+            message_id=message_id,
+            media=InputMediaPhoto(media=FSInputFile(product.image), caption=text),
+            reply_markup=generate_constructor_button(user_cart.total_products)
+        )
     except TelegramBadRequest:
         pass
 
@@ -320,7 +332,7 @@ async def put_info_cart(call: CallbackQuery):
         await bot.send_message(chat_id=chat_id,
                                text='✏️ Кількість успішно змінено')
 
-    await generate_category_menu(call.message)
+    await generate_category_menu(chat_id)
 
 
 @router.callback_query(F.data == 'Ваш кошик')
@@ -352,39 +364,64 @@ async def delete_cart_product(call: CallbackQuery):
 
 
 @router.callback_query(F.data == 'order_pay')
-async def create_order(call: CallbackQuery):
-    # Оплата товарів (тестова)
+async def test_payment(call: CallbackQuery):
     chat_id = call.from_user.id
     message_id = call.message.message_id
-    await bot.delete_message(chat_id=chat_id,
-                             message_id=message_id)
 
-    count, text, total_price, cart_id = counting_products_from_cart(chat_id=chat_id,
-                                                                    user_text='🧮 Оплата замовлення:')
+    await bot.delete_message(chat_id=chat_id, message_id=message_id)
+
+    count, text, total_price, cart_id = counting_products_from_cart(
+        chat_id=chat_id,
+        user_text='🧮 Оплата замовлення:'
+    )
     text += "\n💰 Доставка по місту 100 UAH"
+    total_price += 100  # доставка
 
-    await bot.send_invoice(chat_id=chat_id,
-                           title='Ваше замовлення:',
-                           description=text,
-                           payload='bot-defined invoice payload',
-                           provider_token=PAY,
-                           currency='UAH',
-                           prices=[
-                               LabeledPrice(label='🧮 Загальна вартість', amount=int(total_price) * 100),
-                               LabeledPrice(label='Доставка', amount=100 * 100)
-                           ])
+    await call.message.answer("💳 Обробка оплати... Зачекайте трішки ⏳")
 
-    await sending_report_to_manager(chat_id, text)
+    await asyncio.sleep(10)
 
-
-@router.message(F.successful_payment)
-async def payment_successful(message: Message):
-    chat_id = message.from_user.id
     try:
         clear_finally_cart(chat_id)
-        await message.answer("Дякую за вашу оплату❗️ Замовлення оформлене, кошик очищений")
+        await call.message.answer("✅ Оплата пройшла успішно! Дякуємо за ваше замовлення!")
+        await sending_report_to_manager(chat_id, text)
     except Exception as e:
-        await message.answer(f"Помилка під час очищення кошика: {e}")
+        await call.message.answer(f"❌ Помилка під час очищення кошика: {e}")
+
+
+# @router.callback_query(F.data == 'order_pay')
+# async def create_order(call: CallbackQuery):
+#     # Оплата товарів (тестова)
+#     chat_id = call.from_user.id
+#     message_id = call.message.message_id
+#     await bot.delete_message(chat_id=chat_id,
+#                              message_id=message_id)
+
+#     count, text, total_price, cart_id = counting_products_from_cart(chat_id=chat_id,
+#                                                                     user_text='🧮 Оплата замовлення:')
+#     text += "\n💰 Доставка по місту 100 UAH"
+
+#     await bot.send_invoice(chat_id=chat_id,
+#                            title='Ваше замовлення:',
+#                            description=text,
+#                            payload='bot-defined invoice payload',
+#                            provider_token=PAY,
+#                            currency='UAH',
+#                            prices=[
+#                                LabeledPrice(label='🧮 Загальна вартість', amount=int(total_price) * 100),
+#                                LabeledPrice(label='Доставка', amount=100 * 100)
+#                            ])
+#     await sending_report_to_manager(chat_id, text)
+
+
+# @router.message(F.successful_payment)
+# async def payment_successful(message: Message):
+#     chat_id = message.from_user.id
+#     try:
+#         clear_finally_cart(chat_id)
+#         await message.answer("Дякую за вашу оплату❗️ Замовлення оформлене, кошик очищений")
+#     except Exception as e:
+#         await message.answer(f"Помилка під час очищення кошика: {e}")
 
 
 async def sending_report_to_manager(chat_id: int, text: str):

@@ -56,7 +56,7 @@ def db_get_product_by_id(product_id: int) -> Products:
     return db_session.scalar(query)
 
 
-def db_get_user_cart(chat_id: int) -> Carts:
+def db_get_user_cart(chat_id: int) -> Carts | None:
     query = select(Carts).join(Users).where(Users.telegram == chat_id)
     return db_session.scalar(query)
 
@@ -68,13 +68,9 @@ def db_update_to_cart(price: DECIMAL, cart_id: int, quantity=1) -> None:
     db_session.commit()
 
 
-def db_get_product_by_name(product_name: str) -> Products:
+def db_get_product_by_name(product_name: str) -> Products | None:
     query = select(Products).where(Products.product_name == product_name)
     return db_session.scalar(query)
-# async def db_get_product_by_name(product_name: str) -> Products:
-#     async with db_session() as session:
-#         query = select(Products).where(Products.product_name == product_name)
-#         return await session.scalar(query)
 
 
 def db_ins_or_upd_finally_cart(cart_id, product_name, total_products, total_price):
